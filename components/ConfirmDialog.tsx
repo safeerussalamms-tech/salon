@@ -18,6 +18,7 @@ interface ConfirmDialogProps {
   cancelText?: string
   confirmText?: string
   confirmVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  disabled?: boolean
 }
 
 export function ConfirmDialog({ 
@@ -29,7 +30,8 @@ export function ConfirmDialog({
   conflictTime,
   cancelText = 'Cancel',
   confirmText = 'Confirm',
-  confirmVariant = 'destructive'
+  confirmVariant = 'destructive',
+  disabled = false
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,10 +48,10 @@ export function ConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={disabled}>
             {cancelText}
           </Button>
-          <Button variant={confirmVariant} onClick={onConfirm}>
+          <Button variant={confirmVariant} onClick={onConfirm} disabled={disabled}>
             {confirmText}
           </Button>
         </DialogFooter>

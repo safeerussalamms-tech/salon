@@ -3,58 +3,87 @@ import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Switch } from './ui/switch'
 import { StatusBadge } from './StatusBadge'
-import { useStore } from '@/lib/store'
-import { useRouter } from 'next/navigation'
-import { Barber } from '@/lib/store'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useToast } from '@/hooks/use-toast'
+import { useState, useEffect } from 'react'
 
 interface BarberCardProps {
-  barber: Barber
+  barber: {
+    id: string
+    name: string
+    isWorking: boolean
+  }
   onNotifyNext: () => void
+  routeId?: string
 }
 
-export function BarberCard({ barber, onNotifyNext }: BarberCardProps) {
-  const router = useRouter()
-  const toggleBarberWorking = useStore(state => state.toggleBarberWorking)
+export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
+  const { toast } = useToast()
+
+  const shopId = process.env.NEXT_PUBLIC_SHOP_ID || 'QS001'
+  const queryClient = useQueryClient()
+  
+  // Local state for immediate UI updates
+  const [isWorking, setIsWorking] = useState(barber.isWorking)
+  
+  // Sync with prop changes
+  useEffect(() => {
+    setIsWorking(barber.isWorking)
+  }, [barber.isWorking])
+
+  const updateActiveMutation = useMutation({
+    mutationFn: async (active: boolean) => {
+      if (!routeId) return
+      const res = await fetch(`/api/admin/barbers/${routeId}?shop_id=${shopId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active }),
+      })
+      const text = await res.text()
+      if (!res.ok) throw new Error(text || 'Failed to update status')
+      return text ? JSON.parse(text) : { success: true }
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['shop-summary', shopId] })
+    },
+    onError: (error: any) => {
+      // revert UI
+      setIsWorking(!isWorking)
+    },
+  })
 
   const handleWorkingToggle = (checked: boolean) => {
-    toggleBarberWorking(barber.id, checked)
+    // Update UI immediately
+    setIsWorking(checked)
+    
+    // Call API in background
+    if (routeId) {
+      updateActiveMutation.mutate(checked)
+    }
   }
 
   const handleViewBookings = () => {
-    router.push(`/barber/${barber.id}`)
+    window.location.href = `/barber/${routeId || barber.id}`
   }
 
-  const handleBarberNameClick = () => {
-    router.push(`/barber/${barber.id}/schedule`)
-  }
-
-  const handleBarberIconClick = () => {
-    router.push(`/barber/${barber.id}/schedule`)
-  }
 
   return (
     <Card className="mb-4">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
-              onClick={handleBarberIconClick}
-            >
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
               <Users className="h-5 w-5 text-white" />
             </div>
             <div>
-              <div 
-                className="font-semibold text-gray-900 cursor-pointer hover:text-primary transition-colors"
-                onClick={handleBarberNameClick}
-              >
+              <div className="font-semibold text-gray-900">
                 {barber.name}
               </div>
-              <StatusBadge isWorking={barber.isWorking} />
+              <StatusBadge isWorking={isWorking} />
             </div>
           </div>
           <Switch
-            checked={barber.isWorking}
+            checked={isWorking}
             onCheckedChange={handleWorkingToggle}
             aria-label={`Toggle ${barber.name} working status`}
           />
@@ -62,10 +91,19 @@ export function BarberCard({ barber, onNotifyNext }: BarberCardProps) {
         
         <div className="space-y-3">
           <Button
-            onClick={onNotifyNext}
-            disabled={!barber.isWorking}
+            onClick={async () => {
+              if (!routeId) return onNotifyNext()
+              try {
+                const res = await fetch(`/api/admin/barbers/${routeId}/notify-next?shop_id=${shopId}`, { method: 'POST' })
+                const json = await res.json()
+                toast({ title: json.success ? 'Customer Notified' : 'No Customers', description: json?.message || '' })
+              } catch {
+                toast({ title: 'Failed', description: 'Could not notify next customer.' })
+              }
+            }}
+            disabled={!isWorking}
             className="w-full"
-            variant={barber.isWorking ? "default" : "secondary"}
+            variant={isWorking ? "default" : "secondary"}
           >
             Notify next person
           </Button>
@@ -74,7 +112,7 @@ export function BarberCard({ barber, onNotifyNext }: BarberCardProps) {
             onClick={handleViewBookings}
             variant="outline"
             className="w-full"
-            disabled={!barber.isWorking}
+            disabled={!isWorking}
           >
             <Calendar className="h-4 w-4 mr-2" />
             View online bookings
