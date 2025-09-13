@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: Request, context: { params: Promise<{ barberId: string }> }) {
-  const { barberId } = await context.params
+export async function PATCH(req: Request) {
   const url = new URL(req.url)
   const shopId = url.searchParams.get('shop_id')
+  const body = await req.json()
 
   if (!shopId) {
     return new Response(JSON.stringify({ success: false, error: 'Something went wrong. Please try again later.' }), {
@@ -12,12 +12,13 @@ export async function POST(req: Request, context: { params: Promise<{ barberId: 
     })
   }
 
-  const upstream = `https://quick-barber.vercel.app/api/admin/barbers/${encodeURIComponent(barberId)}/notify-next?shop_id=${encodeURIComponent(shopId)}`
+  const upstream = `https://quick-barber.vercel.app/api/admin/shop-name?shop_id=${encodeURIComponent(shopId)}`
 
   try {
     const res = await fetch(upstream, {
-      method: 'POST',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
       cache: 'no-store',
     })
 
@@ -33,5 +34,3 @@ export async function POST(req: Request, context: { params: Promise<{ barberId: 
     )
   }
 }
-
-

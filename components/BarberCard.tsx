@@ -49,6 +49,11 @@ export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
     onError: () => {
       // revert UI
       setIsWorking(!isWorking)
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again later.',
+        variant: 'destructive',
+      })
     },
   })
 

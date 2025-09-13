@@ -7,7 +7,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ barberId:
   const body = await req.json()
 
   if (!shopId) {
-    return new Response(JSON.stringify({ success: false, error: 'shop_id is required' }), {
+    return new Response(JSON.stringify({ success: false, error: 'Something went wrong. Please try again later.' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     })
@@ -28,10 +28,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ barberId:
       status: res.status,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+  } catch {
     return new Response(
-      JSON.stringify({ success: false, error: 'Proxy request failed', details: errorMessage }),
+      JSON.stringify({ success: false, error: 'Something went wrong. Please try again later.' }),
       { status: 502, headers: { 'Content-Type': 'application/json' } }
     )
   }

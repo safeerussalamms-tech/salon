@@ -79,7 +79,62 @@ export default function EditSalonPage() {
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to add barber. Please try again.',
+        description: 'Something went wrong. Please try again later.',
+        variant: 'destructive',
+      })
+    },
+  })
+
+  const updateSalonNameMutation = useMutation({
+    mutationFn: async (name: string) => {
+      try {
+        console.log('Making API call to update salon name:', name)
+        const res = await fetch(`/api/admin/shop-name?shop_id=${shopId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shop_name: name }),
+        })
+        
+        console.log('API response status:', res.status)
+        
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('API error response:', errorText)
+          throw new Error(`HTTP ${res.status}: ${errorText}`)
+        }
+        
+        const data = await res.json()
+        console.log('API response data:', data)
+        return data
+      } catch (error) {
+        console.error('Fetch error:', error)
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          throw new Error('Network error: Unable to connect to the server. Please check your internet connection.')
+        }
+        throw error
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Mutation success, response:', data)
+      // Check if the response contains success status
+      if (data.success === true || data.status === 'success') {
+        // Invalidate queries to refresh salon data everywhere
+        queryClient.invalidateQueries({ queryKey: ['shop-summary', shopId] })
+        
+        toast({
+          title: 'Salon Name Updated',
+          description: 'Salon name has been updated successfully.',
+        })
+      } else {
+        const errorMsg = data.error || data.message || 'Unknown error'
+        throw new Error(`API error: ${errorMsg}`)
+      }
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error)
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again later.',
         variant: 'destructive',
       })
     },
@@ -107,7 +162,7 @@ export default function EditSalonPage() {
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to delete barber. Please try again.',
+        description: 'Something went wrong. Please try again later.',
         variant: 'destructive',
       })
     },
@@ -120,11 +175,7 @@ export default function EditSalonPage() {
 
   const handleSaveSalonName = () => {
     if (newSalonName.trim()) {
-      // TODO: Implement salon name update API call
-      toast({
-        title: 'Salon Name Updated',
-        description: 'Salon name has been updated successfully.',
-      })
+      updateSalonNameMutation.mutate(newSalonName.trim())
     }
   }
 
@@ -220,10 +271,20 @@ export default function EditSalonPage() {
             />
             <Button 
               onClick={handleSaveSalonName} 
+              disabled={updateSalonNameMutation.isPending || !newSalonName.trim()}
               className="w-full h-12 text-base font-medium"
             >
-              <Save className="h-5 w-5 mr-2" />
-              Save Salon Name
+              {updateSalonNameMutation.isPending ? (
+                <>
+                  <div className="h-5 w-5 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-5 w-5 mr-2" />
+                  Save Salon Name
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
