@@ -43,10 +43,10 @@ export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
       if (!res.ok) throw new Error(text || 'Failed to update status')
       return text ? JSON.parse(text) : { success: true }
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shop-summary', shopId] })
     },
-    onError: (error: any) => {
+    onError: () => {
       // revert UI
       setIsWorking(!isWorking)
     },

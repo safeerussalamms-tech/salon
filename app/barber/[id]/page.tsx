@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TopBar } from '@/components/TopBar'
 import { BookingListItem } from '@/components/BookingListItem'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,13 +8,18 @@ import { useQuery } from '@tanstack/react-query'
  
 
 interface BarberPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function BarberPage({ params }: BarberPageProps) {
   const [activeTab, setActiveTab] = useState<'confirmed' | 'cancelled'>('confirmed')
+  const [id, setId] = useState<string>('')
+  
+  useEffect(() => {
+    params.then(({ id: paramId }) => setId(paramId))
+  }, [params])
   
   const shopId = process.env.NEXT_PUBLIC_SHOP_ID || 'QS001'
 
@@ -53,11 +58,11 @@ export default function BarberPage({ params }: BarberPageProps) {
   }
 
   const { data: bookingsRes, isLoading } = useQuery<BookingsResponse>({
-    queryKey: ['bookings', shopId, params.id, activeTab],
+    queryKey: ['bookings', shopId, id, activeTab],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0] // Format: YYYY-MM-DD
       const statusParam = activeTab === 'cancelled' ? '&status=cancelled' : ''
-      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${params.id}&date=${today}${statusParam}`, {
+      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${id}&date=${today}${statusParam}`, {
         next: { revalidate: 0 },
       })
       if (!res.ok) throw new Error('Failed to load bookings')
@@ -66,8 +71,8 @@ export default function BarberPage({ params }: BarberPageProps) {
     staleTime: 30_000,
   })
 
-  const displayName = shopSummary?.data?.barbers?.find(b => b.barber_id === params.id)?.name 
-    || params.id
+  const displayName = shopSummary?.data?.barbers?.find(b => b.barber_id === id)?.name 
+    || id
 
   // Calculate salon working status based on API data
   const isSalonWorking = shopSummary?.data?.barbers?.some(b => b.active) || false
@@ -148,7 +153,7 @@ export default function BarberPage({ params }: BarberPageProps) {
                       booking={{
                         id: b.booking_id,
                         customerName: b.customer_name || b.customer_phone,
-                        service: b.service_key as any,
+                        service: b.service_key as 'cutting' | 'shaving' | 'both',
                         start: start.toISOString(),
                         end: end.toISOString(),
                         barberId: b.barber_id,

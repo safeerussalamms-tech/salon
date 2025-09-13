@@ -2,11 +2,9 @@
 
 import { TopBar } from '@/components/TopBar'
 import { BarberCard } from '@/components/BarberCard'
-import { useToast } from '@/hooks/use-toast'
 import { useQuery } from '@tanstack/react-query'
 
 export default function HomePage() {
-  const { toast } = useToast()
 
   const shopId = process.env.NEXT_PUBLIC_SHOP_ID || 'QS001'
 

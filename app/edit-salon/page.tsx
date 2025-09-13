@@ -76,7 +76,7 @@ export default function EditSalonPage() {
         description: 'Barber has been added successfully.',
       })
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to add barber. Please try again.',
@@ -104,7 +104,7 @@ export default function EditSalonPage() {
         description: `${barberName} has been deleted successfully.`,
       })
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to delete barber. Please try again.',
@@ -260,7 +260,7 @@ export default function EditSalonPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {shopSummary?.data?.barbers?.map((apiBarber, index) => {
+              {shopSummary?.data?.barbers?.map((apiBarber) => {
                 const displayName = apiBarber.name
                 return (
                 <div key={apiBarber._id} className="bg-white border border-gray-200 rounded-lg p-4">

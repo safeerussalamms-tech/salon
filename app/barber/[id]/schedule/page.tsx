@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TopBar } from '@/components/TopBar'
 import { TimeSlotToggle } from '@/components/TimeSlotToggle'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -12,9 +12,9 @@ import { useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 
 interface SchedulePageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function SchedulePage({ params }: SchedulePageProps) {
@@ -25,12 +25,17 @@ export default function SchedulePage({ params }: SchedulePageProps) {
     slotStart: string
     conflictAt: { start: string; end: string }
   } | null>(null)
+  const [id, setId] = useState<string>('')
   
   const barbers = useStore(state => state.barbers)
   const toggleSlot = useStore(state => state.toggleSlot)
   const forceTurnOffSlot = useStore(state => state.forceTurnOffSlot)
   
-  const barber = barbers.find(b => b.id === params.id)
+  useEffect(() => {
+    params.then(({ id: paramId }) => setId(paramId))
+  }, [params])
+  
+  const barber = barbers.find(b => b.id === id)
   
   if (!barber) {
     notFound()
@@ -111,7 +116,7 @@ export default function SchedulePage({ params }: SchedulePageProps) {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => router.push(`/barber/${barber.id}`)}
+            onClick={() => router.push(`/barber/${id}`)}
           >
             View current bookings
           </Button>

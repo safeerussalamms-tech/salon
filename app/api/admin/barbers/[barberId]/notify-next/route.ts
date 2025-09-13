@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: Request, context: { params: { barberId: string } }) {
-  const { barberId } = context.params
+export async function POST(req: Request, context: { params: Promise<{ barberId: string }> }) {
+  const { barberId } = await context.params
   const url = new URL(req.url)
   const shopId = url.searchParams.get('shop_id')
 
@@ -26,9 +26,10 @@ export async function POST(req: Request, context: { params: { barberId: string }
       status: res.status,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     return new Response(
-      JSON.stringify({ success: false, error: 'Proxy request failed', details: String(error?.message || error) }),
+      JSON.stringify({ success: false, error: 'Proxy request failed', details: errorMessage }),
       { status: 502, headers: { 'Content-Type': 'application/json' } }
     )
   }
