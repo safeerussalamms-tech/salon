@@ -58,7 +58,7 @@ export function CancelFutureBookingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-md mx-auto" hideClose>
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             Switch Off {barberName}
