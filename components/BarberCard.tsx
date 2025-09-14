@@ -72,30 +72,29 @@ export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
   const checkFutureBookingsMutation = useMutation({
     mutationFn: async () => {
       if (!routeId) return []
-      // Get future bookings (from tomorrow onwards)
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+      // Get today's bookings
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0]
       
-      console.log('Checking future bookings for date:', tomorrowStr, 'barber:', routeId)
+      console.log('Checking today\'s bookings for date:', todayStr, 'barber:', routeId)
       
-      // Try to get future bookings - if API doesn't support future dates, we'll get empty array
-      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${routeId}&date=${tomorrowStr}`, {
+      // Try to get today's bookings - if API doesn't support future dates, we'll get empty array
+      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${routeId}&date=${todayStr}`, {
         next: { revalidate: 0 },
       })
-      console.log('Future bookings API response status:', res.status)
+      console.log('Today\'s bookings API response status:', res.status)
       
       if (!res.ok) {
-        // If API doesn't support future dates, return empty array
-        console.log('Future bookings API failed, returning empty array')
+        // If API doesn't support today's bookings, return empty array
+        console.log('Today\'s bookings API failed, returning empty array')
         return []
       }
       const data = await res.json()
-      console.log('Future bookings API response data:', data)
+      console.log('Today\'s bookings API response data:', data)
       return data.data || []
     },
     onSuccess: (bookings) => {
-      console.log('Future bookings found:', bookings)
+      console.log('Today\'s bookings found:', bookings)
       setFutureBookings(bookings)
       
       // Only show modal if there are actual future bookings
