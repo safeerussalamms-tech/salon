@@ -80,7 +80,7 @@ export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
       console.log('Checking future bookings for date:', tomorrowStr, 'barber:', routeId)
       
       // Try to get future bookings - if API doesn't support future dates, we'll get empty array
-      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${routeId}&date=${tomorrowStr}&status=booked`, {
+      const res = await fetch(`https://quick-barber.vercel.app/api/admin/bookings?shop_id=${shopId}&barber_id=${routeId}&date=${tomorrowStr}`, {
         next: { revalidate: 0 },
       })
       console.log('Future bookings API response status:', res.status)
