@@ -96,26 +96,15 @@ export function BarberCard({ barber, onNotifyNext, routeId }: BarberCardProps) {
     },
     onSuccess: (bookings) => {
       console.log('Future bookings found:', bookings)
-      // If no bookings found, add some test data to verify the functionality
-      if (bookings.length === 0) {
-        const testBookings = [
-          {
-            _id: 'test-booking-1',
-            booking_id: 'BK001',
-            date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
-            start_time: '10:00',
-            end_time: '10:30',
-            customer_name: 'Test Customer',
-            customer_phone: '+1234567890',
-            service_key: 'cutting'
-          }
-        ]
-        console.log('No future bookings found, using test data:', testBookings)
-        setFutureBookings(testBookings)
+      setFutureBookings(bookings)
+      
+      // Only show modal if there are actual future bookings
+      if (bookings.length > 0) {
+        setShowCancelModal(true)
       } else {
-        setFutureBookings(bookings)
+        // No future bookings, just turn off the barber directly
+        updateActiveMutation.mutate(false)
       }
-      setShowCancelModal(true)
     },
     onError: () => {
       // If we can't check bookings, just switch off without modal
